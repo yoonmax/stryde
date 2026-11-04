@@ -35,8 +35,9 @@ npm run preview
 ```
 
 `dist/` is a static site with no server component and uses relative paths, so any static host works, at any
-sub-path. The live demo is deployed to GitHub Pages by `.github/workflows/deploy.yml` on every push to `main`,
-after the unit tests pass. To host it elsewhere, use build command `npm run build` and output directory `dist`.
+sub-path. `npm run deploy` publishes the build to the `gh-pages` branch, which serves the live demo. A workflow
+runs the unit tests and a build on every push to `main`. To host it elsewhere, use build command `npm run build`
+and output directory `dist`.
 
 ## Controls
 

@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "record-routes": "node scripts/record-routes.mjs",
     "measure": "node scripts/measure-performance.mjs",
-    "screenshots": "node scripts/capture-screenshots.mjs"
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "deploy": "sh scripts/deploy-pages.sh"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.21.0",
