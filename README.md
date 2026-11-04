@@ -229,7 +229,7 @@ The production bundle is about 2.0 MB gzipped, most of it the inlined Rapier WAS
 npm test
 ```
 
-200 tests run in under a second: movement, every ability, exploit limits, collision edge cases, determinism, all
+208 tests run in under a second: movement, every ability, exploit limits, collision edge cases, determinism, all
 course routes, spawn safety on every level, timing, replay encoding, input and rebinding, settings and statistics.
 
 ```bash

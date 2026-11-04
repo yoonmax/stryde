@@ -54,6 +54,13 @@ describe.each(COURSE_ORDER)('course %s structure', (id) => {
     expect(profile.length).toBeGreaterThan(200);
   });
 
+  it('has a trigger at every gate reaching over the whole platform and any line above it', () => {
+    const level = getLevel(id);
+    for (const z of [...level.checkpoints, level.finishZone]) {
+      expect(z.center.y + z.half.y - (z.floorY ?? z.center.y - z.half.y + 30)).toBeGreaterThanOrEqual(59);
+    }
+  });
+
   it('refuses the finish until required checkpoints are reached', () => {
     const level = getLevel(id);
     const sim = new Simulation(level);

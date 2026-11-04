@@ -18,6 +18,10 @@ const MAX_SOLID_DIMENSION = 700;
 
 const DEG = Math.PI / 180;
 
+const GATE_TRIGGER_ABOVE = 60;
+const GATE_TRIGGER_BELOW = 30;
+const GATE_TRIGGER_SIDE = 12;
+
 /** Quaternion for yaw (Y), then pitch (local X), then roll (local Z). Angles in radians. */
 export function quatFromEuler(yaw = 0, pitch = 0, roll = 0) {
   const cy = Math.cos(yaw / 2), sy = Math.sin(yaw / 2);
@@ -192,8 +196,10 @@ export class LevelBuilder {
     const index = this.checkpoints.length;
     this.checkpoints.push({
       index,
-      center: { x: at[0], y: at[1] + height / 2, z: at[2] },
-      half: { x: width / 2, y: height / 2, z: depth / 2 },
+      // The trigger is far larger than the frame you see. Swinging over a gate or past its post still
+      // counts, because a fast line that misses a thin volume should never cost a player the run.
+      center: { x: at[0], y: at[1] + (GATE_TRIGGER_ABOVE - GATE_TRIGGER_BELOW) / 2, z: at[2] },
+      half: { x: width / 2 + GATE_TRIGGER_SIDE, y: (GATE_TRIGGER_ABOVE + GATE_TRIGGER_BELOW) / 2, z: depth / 2 },
       yaw,
       floorY: at[1],
       respawn: { x: opt.respawn?.[0] ?? at[0], y: (opt.respawn?.[1] ?? at[1]) + 0.05, z: opt.respawn?.[2] ?? at[2] },
@@ -209,8 +215,8 @@ export class LevelBuilder {
     const yaw = (opt.yaw ?? 0) * DEG;
     const width = opt.width ?? 18, height = opt.height ?? 10, depth = opt.depth ?? 4;
     this.finishZone = {
-      center: { x: at[0], y: at[1] + height / 2, z: at[2] },
-      half: { x: width / 2, y: height / 2, z: depth / 2 },
+      center: { x: at[0], y: at[1] + (GATE_TRIGGER_ABOVE - GATE_TRIGGER_BELOW) / 2, z: at[2] },
+      half: { x: width / 2 + GATE_TRIGGER_SIDE, y: (GATE_TRIGGER_ABOVE + GATE_TRIGGER_BELOW) / 2, z: depth / 2 },
       yaw,
     };
     this.visuals.push({ kind: 'gate', pos: P(at), width, height, yaw, role: 'finish' });

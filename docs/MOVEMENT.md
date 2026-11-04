@@ -46,6 +46,13 @@ Each of these has a test.
   climbed by alternating between them, and that is deliberate: the Flue sections are built on it.
 - **Swing energy:** the rope solver can only lose energy. Input can add energy, but only up to 34 m/s.
 
+## Checkpoints
+
+A gate's trigger is much larger than its visible frame: 60 m above the floor, 30 m below, 12 m past each post.
+Progress only moves forward, and reaching a later gate counts even if an earlier one was bypassed, leaving that
+split empty. The finish only asks for the last required gate. A clever line is rewarded, and a run can't be
+stranded by clipping past a thin volume at speed.
+
 ## State model
 
 Locomotion is one exclusive state: `GROUNDED`, `RUNNING`, `SLIDING`, `JUMPING`, `FALLING`,

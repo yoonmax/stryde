@@ -80,20 +80,36 @@ describe('checkpoints and finish volumes', () => {
     expect(m.respawn.pos).toEqual(level.checkpoints[0].respawn);
   });
 
-  it('will not credit a later gate while a required earlier one is unmet', () => {
+  it('flying past a gate does not void the run: the later gate still counts', () => {
     const level = miniCourse();
-    const m = new CheckpointManager(level);
-    expect(m.test({ x: 0, y: 2, z: -55 }, { x: 0, y: 2, z: -65 })).toBeNull();
-    expect(m.allRequiredReached).toBe(false);
-  });
-
-  it('credits a later gate when an optional earlier one was skipped by a shortcut', () => {
-    const level = miniCourse();
-    level.checkpoints[0].required = false;
     const m = new CheckpointManager(level);
     const hit = m.test({ x: 0, y: 2, z: -55 }, { x: 0, y: 2, z: -65 });
     expect(hit.checkpoint.index).toBe(1);
+    expect(m.reached).toEqual([false, true]);
     expect(m.allRequiredReached).toBe(true);
+    expect(m.test({ x: 0, y: 2, z: -25 }, { x: 0, y: 2, z: -35 })).toBeNull();
+  });
+
+  it('a single tick crossing two gates credits the furthest', () => {
+    const m = new CheckpointManager(miniCourse());
+    expect(m.test({ x: 0, y: 2, z: -20 }, { x: 0, y: 2, z: -70 }).checkpoint.index).toBe(1);
+  });
+
+  it('the finish still needs the last required gate', () => {
+    const m = new CheckpointManager(miniCourse());
+    expect(m.allRequiredReached).toBe(false);
+    m.test({ x: 0, y: 2, z: -25 }, { x: 0, y: 2, z: -35 });
+    expect(m.allRequiredReached).toBe(false);
+  });
+
+  it('a gate counts when swung over high above its frame or past its post', () => {
+    const level = miniCourse();
+    const cp = level.checkpoints[0];
+    const over = new CheckpointManager(level);
+    expect(over.test({ x: 0, y: 45, z: -25 }, { x: 0, y: 45, z: -35 })).not.toBeNull();
+    const beside = new CheckpointManager(level);
+    expect(beside.test({ x: cp.half.x - 1, y: 2, z: -25 }, { x: cp.half.x - 1, y: 2, z: -35 })).not.toBeNull();
+    expect(cp.half.x).toBeGreaterThan(15 + 10);
   });
 });
 
@@ -135,6 +151,18 @@ describe('a full timed run', () => {
     expect(sim.timer.elapsed).toBe(held);
     sim.step(fwd());
     expect(sim.timer.elapsed).toBeCloseTo(held + DT, 6);
+  });
+
+  it('finishes and records an empty split when a gate was flown past', () => {
+    const level = miniCourse();
+    sim = new Simulation(level);
+    sim.startRun(0.01);
+    sim.step(fwd());
+    sim.player.teleport({ x: 0, y: 0.05, z: -50 }, 0);
+    for (let i = 0; i < 2400 && sim.phase !== RunPhase.FINISHED; i++) sim.step(fwd());
+    expect(sim.phase).toBe(RunPhase.FINISHED);
+    expect(sim.result.splits[0]).toBeUndefined();
+    expect(sim.result.splits[1]).toBeGreaterThan(0);
   });
 
   it('falling respawns at the last checkpoint and restores a clean state', () => {

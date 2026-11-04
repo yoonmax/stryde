@@ -33,43 +33,36 @@ export function segmentEntersZone(from, to, zone) {
 }
 
 /**
- * Tracks route progress. Gates are ordered; reaching a later one counts even if an optional earlier
- * one was bypassed by a shortcut. Required gates must all be passed, or the finish will not accept.
+ * Tracks route progress. Gates are ordered and progress only moves forward. Reaching a later gate counts
+ * even if an earlier one was bypassed, so a shortcut or an unusually high line is rewarded rather than
+ * voided. That earlier gate's split is simply left empty. The finish only asks for the last required gate.
  */
 export class CheckpointManager {
   constructor(level) {
     this.checkpoints = level.checkpoints;
     this.spawn = level.spawn;
+    this.lastRequired = -1;
+    level.checkpoints.forEach((cp, i) => { if (cp.required) this.lastRequired = i; });
     this.reset();
   }
 
   reset() { this.current = -1; this.reached = new Array(this.checkpoints.length).fill(false); }
 
-  /** Returns {checkpoint, fraction} when the segment reaches a new gate this tick. */
+  /** Returns {checkpoint, fraction} for the furthest new gate this segment reaches, if any. */
   test(from, to) {
+    let hit = null;
     for (let i = this.current + 1; i < this.checkpoints.length; i++) {
-      const cp = this.checkpoints[i];
-      const f = segmentEntersZone(from, to, cp);
-      if (f === null) continue;
-      if (!this.canReach(i)) continue;
-      this.current = i;
-      this.reached[i] = true;
-      return { checkpoint: cp, fraction: f };
+      const f = segmentEntersZone(from, to, this.checkpoints[i]);
+      if (f !== null) hit = { checkpoint: this.checkpoints[i], fraction: f };
     }
-    return null;
+    if (hit) {
+      this.current = hit.checkpoint.index;
+      this.reached[this.current] = true;
+    }
+    return hit;
   }
 
-  /** A gate can't be credited while an earlier required gate is unmet, unless nothing required is skipped. */
-  canReach(i) {
-    for (let j = 0; j < i; j++) {
-      if (this.checkpoints[j].required && !this.reached[j]) return false;
-    }
-    return true;
-  }
-
-  get allRequiredReached() {
-    return this.checkpoints.every((cp, i) => !cp.required || this.reached[i]);
-  }
+  get allRequiredReached() { return this.current >= this.lastRequired; }
 
   get respawn() {
     if (this.current < 0) return { pos: this.spawn.pos, yaw: this.spawn.yaw };
